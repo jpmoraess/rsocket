@@ -1,15 +1,13 @@
 package br.com.moraesit.rsocket;
 
 import br.com.moraesit.rsocket.dto.RequestDTO;
+import br.com.moraesit.rsocket.dto.ResponseDTO;
 import br.com.moraesit.rsocket.util.ObjectUtil;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
 import io.rsocket.core.RSocketConnector;
 import io.rsocket.transport.netty.client.TcpClientTransport;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -33,6 +31,20 @@ public class Lect01RSocketTest {
         Mono<Void> mono = this.rSocket.fireAndForget(payload);
 
         StepVerifier.create(mono)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("requestResponse")
+    public void requestResponse() {
+        Payload payload = ObjectUtil.toPayload(new RequestDTO(5));
+
+        Mono<ResponseDTO> responseDTOMono = this.rSocket.requestResponse(payload)
+                .map(p -> ObjectUtil.toObject(p, ResponseDTO.class))
+                .doOnNext(System.out::println);
+
+        StepVerifier.create(responseDTOMono)
+                .expectNextCount(1)
                 .verifyComplete();
     }
 }
