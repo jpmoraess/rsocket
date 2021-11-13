@@ -1,10 +1,12 @@
 package br.com.moraesit.rsocket.service;
 
+import br.com.moraesit.rsocket.dto.ChartResponseDTO;
 import br.com.moraesit.rsocket.dto.RequestDTO;
 import br.com.moraesit.rsocket.dto.ResponseDTO;
 import br.com.moraesit.rsocket.util.ObjectUtil;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,6 +37,15 @@ public class MathService implements RSocket {
                 .map(i -> new ResponseDTO(requestDTO.getInput(), i))
                 .delayElements(Duration.ofSeconds(1))
                 .doOnNext(System.out::println)
+                .map(ObjectUtil::toPayload);
+    }
+
+    @Override
+    public Flux<Payload> requestChannel(Publisher<Payload> payloads) {
+        return Flux.from(payloads)
+                .map(p -> ObjectUtil.toObject(p, RequestDTO.class))
+                .map(RequestDTO::getInput)
+                .map(i -> new ChartResponseDTO(i, (i * i) + 1))
                 .map(ObjectUtil::toPayload);
     }
 }

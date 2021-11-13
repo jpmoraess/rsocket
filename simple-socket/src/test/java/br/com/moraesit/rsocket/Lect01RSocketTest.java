@@ -1,5 +1,6 @@
 package br.com.moraesit.rsocket;
 
+import br.com.moraesit.rsocket.dto.ChartResponseDTO;
 import br.com.moraesit.rsocket.dto.RequestDTO;
 import br.com.moraesit.rsocket.dto.ResponseDTO;
 import br.com.moraesit.rsocket.util.ObjectUtil;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import java.time.Duration;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class Lect01RSocketTest {
@@ -60,6 +63,23 @@ public class Lect01RSocketTest {
 
         StepVerifier.create(flux)
                 .expectNextCount(10)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("requestChannel")
+    public void requestChannel() {
+        Flux<Payload> payloadFlux = Flux.range(-10, 21)
+                .delayElements(Duration.ofMillis(500))
+                .map(RequestDTO::new)
+                .map(ObjectUtil::toPayload);
+
+        Flux<ChartResponseDTO> chartResponseDTOFlux = this.rSocket.requestChannel(payloadFlux)
+                .map(p -> ObjectUtil.toObject(p, ChartResponseDTO.class))
+                .doOnNext(System.out::println);
+
+        StepVerifier.create(chartResponseDTOFlux)
+                .expectNextCount(21)
                 .verifyComplete();
     }
 }
