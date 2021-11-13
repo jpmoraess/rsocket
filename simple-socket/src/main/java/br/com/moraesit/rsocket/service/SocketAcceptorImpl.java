@@ -13,6 +13,7 @@ public class SocketAcceptorImpl implements SocketAcceptor {
     @Override
     public Mono<RSocket> accept(ConnectionSetupPayload connectionSetupPayload, RSocket rSocket) {
         log.info("accept method");
-        return Mono.fromCallable(MathService::new);
+        //Mono.fromCallable(MathService::new);
+        return Mono.fromCallable(() -> new BatchJobService(rSocket));
     }
 }
