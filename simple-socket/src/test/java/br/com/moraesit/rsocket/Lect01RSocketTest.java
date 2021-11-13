@@ -8,6 +8,7 @@ import io.rsocket.RSocket;
 import io.rsocket.core.RSocketConnector;
 import io.rsocket.transport.netty.client.TcpClientTransport;
 import org.junit.jupiter.api.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -45,6 +46,20 @@ public class Lect01RSocketTest {
 
         StepVerifier.create(responseDTOMono)
                 .expectNextCount(1)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("requestStream")
+    public void requestStream() {
+        Payload payload = ObjectUtil.toPayload(new RequestDTO(5));
+
+        Flux<ResponseDTO> flux = this.rSocket.requestStream(payload)
+                .map(p -> ObjectUtil.toObject(p, ResponseDTO.class))
+                .doOnNext(System.out::println);
+
+        StepVerifier.create(flux)
+                .expectNextCount(10)
                 .verifyComplete();
     }
 }
