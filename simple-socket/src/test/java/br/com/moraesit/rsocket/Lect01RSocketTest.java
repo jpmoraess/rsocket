@@ -5,10 +5,7 @@ import io.rsocket.RSocket;
 import io.rsocket.core.RSocketConnector;
 import io.rsocket.transport.netty.client.TcpClientTransport;
 import io.rsocket.util.DefaultPayload;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -24,7 +21,7 @@ public class Lect01RSocketTest {
                 .block();
     }
 
-    @Test
+    @RepeatedTest(3)
     @DisplayName("fireAndForget")
     public void fireAndForget() {
         Payload payload = DefaultPayload.create("Hello World!");
