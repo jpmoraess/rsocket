@@ -2,6 +2,7 @@ package br.com.moraesit.rsocket;
 
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
+import io.rsocket.core.RSocketClient;
 import io.rsocket.core.RSocketConnector;
 import io.rsocket.transport.netty.client.TcpClientTransport;
 import io.rsocket.util.DefaultPayload;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
@@ -17,19 +19,22 @@ import java.time.Duration;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class Lec04PersistentConnectionTest {
 
-    private RSocket rSocket;
+    private RSocketClient rSocketClient;
 
     @BeforeAll
     public void setup() {
-        this.rSocket = RSocketConnector.create()
+        Mono<RSocket> socketMono = RSocketConnector.create()
                 .connect(TcpClientTransport.create("localhost", 6565))
-                .block();
+                .doOnNext(r -> System.out.println("going to connect"));
+
+        this.rSocketClient = RSocketClient.from(socketMono);
     }
 
     @Test
     @DisplayName("persistentConnection")
     public void persistentConnection() throws InterruptedException {
-        Flux<String> flux = this.rSocket.requestStream(DefaultPayload.create(""))
+        Flux<String> flux = this.rSocketClient
+                .requestStream(Mono.just(DefaultPayload.create("")))
                 .map(Payload::getDataUtf8)
                 .delayElements(Duration.ofMillis(300))
                 .take(10)
@@ -40,10 +45,11 @@ public class Lec04PersistentConnectionTest {
                 .verifyComplete();
 
         System.out.println("going to sleep");
-        Thread.sleep(15000);
+        Thread.sleep(5000);
         System.out.println("woke up");
 
-        Flux<String> flux2 = this.rSocket.requestStream(DefaultPayload.create(""))
+        Flux<String> flux2 = this.rSocketClient
+                .requestStream(Mono.just(DefaultPayload.create("")))
                 .map(Payload::getDataUtf8)
                 .delayElements(Duration.ofMillis(300))
                 .take(10)
